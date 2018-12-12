@@ -427,6 +427,7 @@ public class Jackson2HalIntegrationTest extends AbstractJackson2MarshallingInteg
 	/**
 	 * @see #667
 	 * @see #762
+	 * @see #763
 	 */
 	@Test
 	public void handleTemplatedLinksOnDeserialization() throws IOException {
