@@ -31,11 +31,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * {@link ApplicationContext}.
  *
  * @author Oliver Gierke
+ * @author Greg Turnquist
  */
 @RequiredArgsConstructor
-class ConverterRegisteringBeanPostProcessor implements BeanPostProcessor {
+class HypermediaConverterRegisteringBeanPostProcessor implements BeanPostProcessor {
 
-	private final ObjectFactory<ConverterRegisteringWebMvcConfigurer> configurer;
+	private final ObjectFactory<HypermediaConverterRegisteringWebMvcConfigurer> hypermediaConverterConfigurerFactory;
 
 	/* 
 	 * (non-Javadoc)
@@ -46,8 +47,9 @@ class ConverterRegisteringBeanPostProcessor implements BeanPostProcessor {
 
 		if (bean instanceof RestTemplate) {
 
-			ConverterRegisteringWebMvcConfigurer object = configurer.getObject();
+			HypermediaConverterRegisteringWebMvcConfigurer object = hypermediaConverterConfigurerFactory.getObject();
 			object.extendMessageConverters(((RestTemplate) bean).getMessageConverters());
+			return bean;
 		}
 
 		return bean;

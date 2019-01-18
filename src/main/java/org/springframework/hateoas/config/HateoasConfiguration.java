@@ -67,9 +67,15 @@ class HateoasConfiguration {
 	}
 
 	@Bean
-	ConverterRegisteringBeanPostProcessor jackson2ModuleRegisteringBeanPostProcessor(
-			ObjectFactory<ConverterRegisteringWebMvcConfigurer> configurer) {
-		return new ConverterRegisteringBeanPostProcessor(configurer);
+	HypermediaConverterRegisteringBeanPostProcessor restTemplateBeanPostProcessor(
+			ObjectFactory<HypermediaConverterRegisteringWebMvcConfigurer> webMvcConfigurerObjectFactory) {
+		return new HypermediaConverterRegisteringBeanPostProcessor(webMvcConfigurerObjectFactory);
+	}
+
+	@Bean
+	ReactiveWebClientBeanPostProcessor webClientBeanPostProcessor(
+		ObjectFactory<ReactiveWebClientConfigurer> webClientConfigurerObjectFactory) {
+		return new ReactiveWebClientBeanPostProcessor(webClientConfigurerObjectFactory);
 	}
 
 	// RelProvider

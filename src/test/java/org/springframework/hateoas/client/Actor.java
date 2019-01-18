@@ -15,16 +15,19 @@
  */
 package org.springframework.hateoas.client;
 
+import lombok.Data;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonAutoDetect(fieldVisibility = Visibility.ANY)
+@Data
 public class Actor {
 
 	String name;
 
-	Actor(@JsonProperty("name") String name) {
+	public Actor(@JsonProperty("name") String name) {
 		this.name = name;
 	}
 }

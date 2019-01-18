@@ -37,6 +37,7 @@ import org.springframework.hateoas.collectionjson.CollectionJsonLinkDiscoverer;
 import org.springframework.hateoas.config.EnableHypermediaSupport.HypermediaType;
 import org.springframework.hateoas.hal.HalLinkDiscoverer;
 import org.springframework.hateoas.hal.forms.HalFormsLinkDiscoverer;
+import org.springframework.hateoas.support.WebStackUtils;
 import org.springframework.hateoas.uber.UberLinkDiscoverer;
 import org.springframework.util.ClassUtils;
 
@@ -72,9 +73,24 @@ class HypermediaSupportBeanDefinitionRegistrar implements ImportBeanDefinitionRe
 			}
 		}
 
-		BeanDefinitionBuilder configurerBeanDefinition = rootBeanDefinition(ConverterRegisteringWebMvcConfigurer.class);
-		configurerBeanDefinition.addPropertyValue("hypermediaTypes", types);
-		registerSourcedBeanDefinition(configurerBeanDefinition, metadata, registry);
+		if (WebStackUtils.SPRING_MVC.isAvailable()) {
+			
+			BeanDefinitionBuilder webMvcConfigurerBeanDefinition = rootBeanDefinition(HypermediaConverterRegisteringWebMvcConfigurer.class);
+			webMvcConfigurerBeanDefinition.addPropertyValue("hypermediaTypes", types);
+			registerSourcedBeanDefinition(webMvcConfigurerBeanDefinition, metadata, registry);
+		}
+
+		if (WebStackUtils.REACTOR.isAvailable()) {
+
+			BeanDefinitionBuilder encoderDecoderWebFluxConfigurer = rootBeanDefinition(HypermediaEncoderDecoderWebFluxConfigurer.class);
+			encoderDecoderWebFluxConfigurer.addPropertyValue("hypermediaTypes", types);
+			registerSourcedBeanDefinition(encoderDecoderWebFluxConfigurer, metadata, registry);
+
+			BeanDefinitionBuilder webClientConfigurerBeanDefinition = rootBeanDefinition(ReactiveWebClientConfigurer.class);
+			webClientConfigurerBeanDefinition.addPropertyValue("hypermediaTypes", types);
+			registerSourcedBeanDefinition(webClientConfigurerBeanDefinition, metadata, registry);
+		}
+
 	}
 
 	/**
