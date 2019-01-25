@@ -40,6 +40,7 @@ import org.springframework.hateoas.core.DummyInvocationUtils.MethodInvocation;
 import org.springframework.hateoas.core.LinkBuilderSupport;
 import org.springframework.hateoas.core.MappingDiscoverer;
 import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.plugin.core.OrderAwarePluginRegistry;
 import org.springframework.plugin.core.PluginRegistry;
 import org.springframework.util.Assert;
@@ -48,6 +49,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.DefaultUriTemplateHandler;
 import org.springframework.web.util.UriComponents;
@@ -214,6 +216,10 @@ public class ControllerLinkBuilder extends LinkBuilderSupport<ControllerLinkBuil
 		return FACTORY.linkTo(invocationValue);
 	}
 
+	public static ControllerLinkBuilder linkTo(Object invocationValue, ServerWebExchange exchange) {
+		return FACTORY.linkToReactor(invocationValue, exchange);
+	}
+
 	/**
 	 * Extract a {@link Link} from the {@link ControllerLinkBuilder} and look up the related {@link Affordance}. Should
 	 * only be one.
@@ -249,7 +255,7 @@ public class ControllerLinkBuilder extends LinkBuilderSupport<ControllerLinkBuil
 		return DummyInvocationUtils.methodOn(controller, parameters);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.hateoas.UriComponentsLinkBuilder#getThis()
 	 */
@@ -315,6 +321,28 @@ public class ControllerLinkBuilder extends LinkBuilderSupport<ControllerLinkBuil
 		ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromServletMapping(request);
 
 		// Spring 5.1 can handle X-Forwarded-Ssl headers...
+		if (isSpringAtLeast5_1()) {
+			return builder;
+		} else {
+			return handleXForwardedSslHeader(request, builder);
+		}
+	}
+
+	/**
+	 * Returns a {@link UriComponentsBuilder} obtained from the {@link ServerWebExchange}.
+	 * @param exchange
+	 * @return
+	 */
+	public static UriComponentsBuilder getBuilder(ServerWebExchange exchange) {
+
+		if (exchange == null) {
+			return UriComponentsBuilder.fromPath("/");
+		}
+		
+		ServerHttpRequest request = exchange.getRequest();
+
+		UriComponentsBuilder builder = UriComponentsBuilder.fromHttpRequest(request);
+
 		if (isSpringAtLeast5_1()) {
 			return builder;
 		} else {

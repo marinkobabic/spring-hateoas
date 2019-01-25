@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -71,6 +72,35 @@ class ForwardedHeader {
 
 		return builder;
 
+	}
+
+	/**
+	 * Utility method to pull handling of {@literal X-Forwarded-Ssl} into a class that will be removed when rebaselined
+	 * against Spring 5.1
+	 *
+	 * @param request
+	 * @param builder
+	 * @return
+	 * @deprecated No longer needed with Spring 5.1
+	 */
+	@Deprecated
+	public static UriComponentsBuilder handleXForwardedSslHeader(ServerHttpRequest request, UriComponentsBuilder builder) {
+
+		// special case handling for X-Forwarded-Ssl:
+		// apply it, but only if X-Forwarded-Proto is unset.
+
+		if (request.getHeaders().containsKey("X-Forwarded-Ssl")) {
+
+			String forwardedSsl = request.getHeaders().get("X-Forwarded-Ssl").get(0);
+			ForwardedHeader forwarded = ForwardedHeader.of(request.getHeaders().get("Forwarded").get(0));
+			String proto = hasText(forwarded.getProto()) ? forwarded.getProto() : request.getHeaders().get("X-Forwarded-Proto").get(0);
+
+			if (!hasText(proto) && hasText(forwardedSsl) && forwardedSsl.equalsIgnoreCase("on")) {
+				builder.scheme("https");
+			}
+		}
+
+		return builder;
 	}
 
 	/**

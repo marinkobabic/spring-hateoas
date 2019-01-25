@@ -58,7 +58,8 @@ class SpringMvcAffordanceBuilder {
 
 			String methodName = invocation.getMethod().getName();
 
-			Link affordanceLink = new Link(components.toUriString()).withRel(methodName);
+			String href = components.toUriString().equals("") ? "/" : components.toUriString();
+			Link affordanceLink = new Link(href).withRel(methodName);
 
 			MethodParameters invocationMethodParameters = new MethodParameters(invocation.getMethod());
 			

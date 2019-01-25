@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 
 import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.web.server.ServerWebExchange;
 
 /**
  * Extension of {@link LinkBuilderFactory} for implementations that also support creating {@link LinkBuilder}s by
@@ -59,4 +60,6 @@ public interface MethodLinkBuilderFactory<T extends LinkBuilder> extends LinkBui
 	 * @return
 	 */
 	T linkTo(Object methodInvocationResult);
+
+	T linkToReactor(Object methodInvocationResult, ServerWebExchange exchange);
 }

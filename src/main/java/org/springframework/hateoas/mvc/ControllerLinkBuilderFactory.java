@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.hateoas.Link;
@@ -50,6 +51,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ValueConstants;
+import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriTemplate;
@@ -80,7 +82,7 @@ public class ControllerLinkBuilderFactory implements MethodLinkBuilderFactory<Co
 	 * Configures the {@link UriComponentsContributor} to be used when building {@link Link} instances from method
 	 * invocations.
 	 * 
-	 * @see #linkTo(Object)
+	 * @see #linkTo(Object, Optional)
 	 * @param uriComponentsContributors the uriComponentsContributors to set
 	 */
 	public void setUriComponentsContributors(List<? extends UriComponentsContributor> uriComponentsContributors) {
@@ -129,6 +131,15 @@ public class ControllerLinkBuilderFactory implements MethodLinkBuilderFactory<Co
 	 */
 	@Override
 	public ControllerLinkBuilder linkTo(Object invocationValue) {
+		return doLinkTo(invocationValue, Optional.empty());
+	}
+
+	@Override
+	public ControllerLinkBuilder linkToReactor(Object methodInvocationResult, ServerWebExchange exchange) {
+		return doLinkTo(methodInvocationResult, Optional.of(exchange));
+	}
+
+	private ControllerLinkBuilder doLinkTo(Object invocationValue, Optional<ServerWebExchange> optionalExchange) {
 
 		Assert.isInstanceOf(LastInvocationAware.class, invocationValue);
 		LastInvocationAware invocations = (LastInvocationAware) invocationValue;
@@ -139,9 +150,20 @@ public class ControllerLinkBuilderFactory implements MethodLinkBuilderFactory<Co
 
 		String mapping = DISCOVERER.getMapping(invocation.getTargetType(), method);
 
-		UriComponentsBuilder builder = ControllerLinkBuilder.getBuilder().path(mapping);
+		UriComponentsBuilder builder = optionalExchange
+			.map(exchange -> {
+				UriComponentsBuilder builder1 = ControllerLinkBuilder.getBuilder(exchange);
+				builder1.replacePath(mapping);
+				if (mapping == null) {
+					builder1.replacePath("/");
+				}
+				return builder1;
+			})
+			.orElseGet(() -> ControllerLinkBuilder.getBuilder().path(mapping));
 
-		UriTemplate template = new UriTemplate(mapping);
+		UriTemplate template = Optional.ofNullable(mapping)
+			.map(UriTemplate::new)
+			.orElse(new UriTemplate("/"));
 		Map<String, Object> values = new HashMap<>();
 		Iterator<String> names = template.getVariableNames().iterator();
 
